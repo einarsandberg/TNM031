@@ -3,19 +3,12 @@ public class Voter
 	private int validationNumber;
 	private int idNumber;
 	private String name;
-	/*public Voter(int valNum, int idNum)
-	{
-		validationNumber = valNum;
-		idNumber = idNum;
-	}*/
+	private long personNumber; // ex 9207261111
 
-	/*public Voter(int id)
-	{
-		idNumber = id;
-	}*/
-	public Voter(String theName)
+	public Voter(String theName, long thePersonNumber)
 	{
 		name = theName;
+		personNumber = thePersonNumber;
 	}
 
 	public int getValidationNumber()
@@ -35,6 +28,16 @@ public class Voter
 	public void setValidationNumber(int num)
 	{
 		validationNumber = num;
+	}
+
+	public long getPersonalNumber()
+	{
+		return personNumber;
+	}
+
+	public String toString()
+	{
+		return (name+ ":" + String.valueOf(personNumber));
 	}
 
 

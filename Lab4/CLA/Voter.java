@@ -1,27 +1,19 @@
 public class Voter
 {
-	private int validationNumber;
+	//private int validationNumber;
 	private int idNumber;
 	private String name;
-	/*public Voter(int valNum, int idNum)
-	{
-		validationNumber = valNum;
-		idNumber = idNum;
-	}*/
-
-	/*public Voter(int id)
-	{
-		idNumber = id;
-	}*/
-	public Voter(String theName)
+	long persNumber;
+	public Voter(String theName, long thePersNumber)
 	{
 		name = theName;
+		persNumber = thePersNumber;
 	}
 
-	public int getValidationNumber()
+	/*public int getValidationNumber()
 	{
 		return validationNumber;
-	}
+	}*/
 
 	public int getID()
 	{
@@ -31,11 +23,14 @@ public class Voter
 	{
 		return name;
 	}
-
-	public void setValidationNumber(int num)
+	public String toString()
+	{
+		return (name + ":" + String.valueOf(persNumber));
+	}
+	/*public void setValidationNumber(int num)
 	{
 		validationNumber = num;
-	}
+	}*/
 
 
 }

@@ -15,7 +15,7 @@ public class CentralLegitimationAgency
 	static final String STOREPASSWD = "123456";
 	static final String ALIASPASSWD = "123456";
 
-	private List <Voter> voters;
+	private Map <Long, Voter> voters; // map with validation number as key and voter
 	BufferedReader socketIn;
 	PrintWriter socketOut;
 	public CentralLegitimationAgency(int thePort)
@@ -26,7 +26,7 @@ public class CentralLegitimationAgency
 	{
 		try
 		{
-
+			voters = new HashMap <Long, Voter>();
 			KeyStore ks = KeyStore.getInstance("JCEKS");
 			ks.load( new FileInputStream(KEYSTORE), STOREPASSWD.toCharArray());
 
@@ -56,7 +56,11 @@ public class CentralLegitimationAgency
 
 			if (socketIn.readLine().equals("valnum"))
 			{
-				System.out.println("HEJJJ");
+
+				String name = socketIn.readLine();
+				long persNumber = Long.parseLong(socketIn.readLine());
+				sendValidationNumber(name, persNumber);
+				
 			}
 
 
@@ -67,9 +71,33 @@ public class CentralLegitimationAgency
 		}
 
 	}
-	private void sendValidationNumber()
+	private void sendValidationNumber(String name, long persNumber)
 	{
+		Voter v = new Voter(name, persNumber);
+		Random rand = new Random();
+		long min = 1L;
+		long max = 1000000000L;
+		// random validation number from 1 to 1000000000
+		long validationNum = min + ((long)(rand.nextDouble()*(max-min))); 
+		// first voter
+		if (voters.isEmpty())
+		{
+			voters.put(validationNum, v);
+		}
+		else
+		{
+			// produce new validation number if another voter already has it
+			while(voters.containsKey(validationNum))
+			{
+				validationNum = min + ((long)(rand.nextDouble()*(max-min)));
+			}
+			voters.put(validationNum, v);
 
+		}
+		System.out.println(v.toString());
+		System.out.println(validationNum);
+		//send validation number to client
+		socketOut.println(validationNum);
 	}
 
 	public static void main(String[] args) 

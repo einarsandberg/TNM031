@@ -59,8 +59,10 @@ public class VotingClient
 			socketIn = new BufferedReader(new InputStreamReader(client.getInputStream()));
 			socketOut = new PrintWriter(client.getOutputStream(), true);
 
-			Voter v = new Voter("Einar");
-			askCLAForValidationNum(v);
+			long persNumber = 9201011111L;
+			Voter v = new Voter("Einar", persNumber);
+			// v.toString creates format name:personNumber;
+			askCLAForValidationNum(v.getName(), v.getPersonalNumber());
 
 		}
 
@@ -69,10 +71,20 @@ public class VotingClient
 			System.out.println("Error" + e.toString());
 		}
 	}
-	private void askCLAForValidationNum(Voter v)
+	private void askCLAForValidationNum(String name, long persNum)
 	{
-		System.out.println("HEJ KLIENT");
-		socketOut.println("valnum");			
+		try
+		{
+			socketOut.println("valnum");
+			socketOut.println(name);
+			socketOut.println(persNum);
+			long validationNum = Long.parseLong(socketIn.readLine());
+			System.out.println(validationNum);
+		}
+		catch (Exception e)
+		{
+			System.out.println("Error in askCLAForValidationNum " + e.toString());
+		}
 	}
 
 
