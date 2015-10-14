@@ -15,7 +15,7 @@ public class CentralLegitimationAgency
 	static final String STOREPASSWD = "123456";
 	static final String ALIASPASSWD = "123456";
 
-	private Map <Long, Voter> voters; // map with validation number as key and voter
+	private Map <Long, Voter > voters; // map with validation number as key and voter as value
 	BufferedReader socketIn;
 	PrintWriter socketOut;
 	SSLSocket incoming;
@@ -70,6 +70,7 @@ public class CentralLegitimationAgency
 							break;
 
 						default:
+							running = false;
 							break;
 
 					}
@@ -93,27 +94,52 @@ public class CentralLegitimationAgency
 		Random rand = new Random();
 		long min = 1L;
 		long max = 1000000000L;
+		boolean fraud = false;
 		// random validation number from 1 to 1000000000
 		long validationNum = min + ((long)(rand.nextDouble()*(max-min))); 
 		// first voter
 		if (voters.isEmpty())
 		{
 			voters.put(validationNum, v);
+			//send validation number to client
+			socketOut.println(validationNum);
 		}
 		else
-		{
-			// produce new validation number if another voter already has it
-			while(voters.containsKey(validationNum))
+		{	
+
+			List <Voter> listOfVoters = new ArrayList<Voter>(voters.values());
+			//check for fraud
+			for (int i = 0; i < listOfVoters.size(); i++)
 			{
-				validationNum = min + ((long)(rand.nextDouble()*(max-min)));
+				System.out.println(listOfVoters.get(i).getPersonalNumber());
+				if (persNumber == listOfVoters.get(i).getPersonalNumber());
+				{
+					System.out.println("Voter has already voted.");
+					socketOut.println("Election fraud detected!");
+					fraud = true;
+					break;
+				}
+				
 			}
-			voters.put(validationNum, v);
+
+			if (fraud == false)
+			{
+				// produce new validation number if another voter already has it
+				while(voters.containsKey(validationNum))
+				{
+					validationNum = min + ((long)(rand.nextDouble()*(max-min)));
+				}
+				voters.put(validationNum, v);
+				System.out.println("NO FRAUD");
+				//send validation number to client
+				socketOut.println(validationNum);
+
+			}
 
 		}
 		System.out.println(v.toString());
 		System.out.println(validationNum);
-		//send validation number to client
-		socketOut.println(validationNum);
+
 	}
 
 	public static void main(String[] args) 

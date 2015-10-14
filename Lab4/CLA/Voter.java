@@ -3,7 +3,7 @@ public class Voter
 	//private int validationNumber;
 	private int idNumber;
 	private String name;
-	long persNumber;
+	private long persNumber;
 	public Voter(String theName, long thePersNumber)
 	{
 		name = theName;
@@ -26,6 +26,10 @@ public class Voter
 	public String toString()
 	{
 		return (name + ":" + String.valueOf(persNumber));
+	}
+	public long getPersonalNumber()
+	{
+		return persNumber;
 	}
 	/*public void setValidationNumber(int num)
 	{
