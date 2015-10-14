@@ -18,6 +18,8 @@ public class CentralLegitimationAgency
 	private Map <Long, Voter> voters; // map with validation number as key and voter
 	BufferedReader socketIn;
 	PrintWriter socketOut;
+	SSLSocket incoming;
+	private boolean running = true;
 	public CentralLegitimationAgency(int thePort)
 	{
 		port = thePort;
@@ -26,6 +28,7 @@ public class CentralLegitimationAgency
 	{
 		try
 		{
+
 			voters = new HashMap <Long, Voter>();
 			KeyStore ks = KeyStore.getInstance("JCEKS");
 			ks.load( new FileInputStream(KEYSTORE), STOREPASSWD.toCharArray());
@@ -49,25 +52,38 @@ public class CentralLegitimationAgency
 			//client authentication is required
 			sss.setNeedClientAuth(true);
 			System.out.println("Central Legitimation Agency is now active");
-			SSLSocket incoming = (SSLSocket)sss.accept();
-
-			socketIn = new BufferedReader(new InputStreamReader(incoming.getInputStream()));
-			socketOut = new PrintWriter(incoming.getOutputStream(), true);
-
-			if (socketIn.readLine().equals("valnum"))
+			
+			while (running)
 			{
+				incoming = (SSLSocket)sss.accept();
+				socketIn = new BufferedReader(new InputStreamReader(incoming.getInputStream()));
+				socketOut = new PrintWriter(incoming.getOutputStream(), true);
+				String s = socketIn.readLine();
+				if (s!= null)
+				{
+					switch (s)
+					{
+						case "validationNumStep":
+							String name = socketIn.readLine();
+							long persNumber = Long.parseLong(socketIn.readLine());
+							sendValidationNumber(name, persNumber);
+							break;
 
-				String name = socketIn.readLine();
-				long persNumber = Long.parseLong(socketIn.readLine());
-				sendValidationNumber(name, persNumber);
-				
+						default:
+							break;
+
+					}
+				}
+
 			}
+			incoming.close();
 
 
 		}
 		catch (Exception e)
 		{
-			System.out.println("Server failed " + e.toString());
+			System.out.println("Server failed ");
+			e.printStackTrace();
 		}
 
 	}
