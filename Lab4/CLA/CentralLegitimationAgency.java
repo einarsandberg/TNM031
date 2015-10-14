@@ -15,7 +15,7 @@ public class CentralLegitimationAgency
 	static final String STOREPASSWD = "123456";
 	static final String ALIASPASSWD = "123456";
 
-	private Map <Long, Voter > voters; // map with validation number as key and voter as value
+	private Map <Long, Voter> voters; // map with validation number as key and voter as value
 	BufferedReader socketIn;
 	PrintWriter socketOut;
 	SSLSocket incoming;
@@ -106,23 +106,13 @@ public class CentralLegitimationAgency
 		}
 		else
 		{	
-
+			
 			List <Voter> listOfVoters = new ArrayList<Voter>(voters.values());
 			//check for fraud
-			for (int i = 0; i < listOfVoters.size(); i++)
-			{
-				System.out.println(listOfVoters.get(i).getPersonalNumber());
-				if (persNumber == listOfVoters.get(i).getPersonalNumber());
-				{
-					System.out.println("Voter has already voted.");
-					socketOut.println("Election fraud detected!");
-					fraud = true;
-					break;
-				}
-				
-			}
+			fraud = checkForFraud(listOfVoters, persNumber);
 
-			if (fraud == false)
+			//no fraud found, add new voter
+			if (!fraud)
 			{
 				// produce new validation number if another voter already has it
 				while(voters.containsKey(validationNum))
@@ -141,6 +131,25 @@ public class CentralLegitimationAgency
 		System.out.println(validationNum);
 
 	}
+	
+	public boolean checkForFraud(List<Voter> listOfVoters, long persNumber)
+	{
+		boolean fraud = false;
+			for (int i = 0; i < listOfVoters.size(); i++)
+			{
+				System.out.println(listOfVoters.get(i).getPersonalNumber());
+				if (persNumber == listOfVoters.get(i).getPersonalNumber());
+				{
+					System.out.println("Voter has already voted.");
+					socketOut.println("Election fraud detected!");
+					fraud = true;
+					break;
+				}
+			}
+			return fraud;
+
+	}
+
 
 	public static void main(String[] args) 
 	{
