@@ -8,6 +8,7 @@ import java.util.*;
 
 public class VotingClient
 {
+	private boolean running;
 	private InetAddress host;
 	private int port;
 	static final int DEFAULT_PORT = 8189;
@@ -24,6 +25,8 @@ public class VotingClient
 	private PrintWriter socketOutCTF;
 	//private BufferedReader socketInCTF;
 	private SSLSocket socketCTF;
+
+	private List<Voter> authorizedVoters;
 	//constructor
 /*	public VotingClient(InetAddress theHost, int thePort)
 	{
@@ -34,7 +37,12 @@ public class VotingClient
 	{
 		try
 		{
-			
+			authorizedVoters = new ArrayList<Voter>();
+			// add a few authorized voters
+			authorizedVoters.add(new Voter("Einar", 9207261111L));
+			authorizedVoters.add(new Voter("Glenn", 7701011234L));
+			authorizedVoters.add(new Voter("Anna", 5005055555L));
+			authorizedVoters.add(new Voter("Maria", 9302029999L));
 
 			KeyStore ks = KeyStore.getInstance("JCEKS");
 			
@@ -70,25 +78,56 @@ public class VotingClient
 
 			socketOutCTF = new PrintWriter(socketCTF.getOutputStream(), true);
 
-			Voter v = new Voter("Einar", 9201011111L);
-			long validationNum = askCLAForValidationNum(v.getName(), v.getPersonalNumber());
+			displayMenu();
+			running = true;
+			int option = Integer.parseInt(new BufferedReader(new InputStreamReader(System.in)).readLine());
+			while(running)
+			{
+				switch(option)
+				{
+					case 1:
+						System.out.println("Please enter your name: ");
+						String name = new BufferedReader(new InputStreamReader(System.in)).readLine();
+						System.out.println("Please enter your social security number in format yymmddxxxx:");
+						long persNum = Long.parseLong(new BufferedReader(new InputStreamReader(System.in)).readLine());
+						Voter v = new Voter(name, persNum);
+						boolean authorized = checkIfAuthorizedVoter(v);
+						if (!authorized)
+						{
+							System.out.println("You're not authorized to vote!");
+							break;
+						}
+						else
+						{
+							long validationNum = askCLAForValidationNum(v.getName(), v.getPersonalNumber());
+							System.out.println("Please enter party: ");
+							String party = new BufferedReader(new InputStreamReader(System.in)).readLine();
+							v.createIDNumber();
+							Vote vote = new Vote(v.getIDNumber(), validationNum, party);
+							String msgCTF = vote.createCTFMessage();
+							System.out.println(msgCTF);
+							sendMessageToCTF(msgCTF);
+						}
 
-			String party = "Socialdemokraterna";
+						break;
+					case 2:
+						break;
 
-			v.createIDNumber();
-			Vote vote = new Vote(v.getIDNumber(), validationNum, party);
-			String msgCTF = vote.createCTFMessage();
-			System.out.println(msgCTF);
+					case 3:
+						break;
 
-			sendMessageToCTF(msgCTF);
-
-
-
+					case 4:
+						running = false;
+						break;
+				}
+			}
+			
 		}
 
 		catch (Exception e)
 		{
-			System.out.println("Error" + e.toString());
+			System.out.println("Error");
+			e.printStackTrace();
 		}
 	}
 
@@ -109,11 +148,36 @@ public class VotingClient
 		}
 		return -1;
 	}
+
 	private void sendMessageToCTF(String msg)
 	{
 		socketOutCTF.println("msgFromClient");
 		socketOutCTF.println(msg);
-	}	
+	}
+
+	private void displayMenu()
+	{
+		System.out.println("What would you like to do? Please pick an option.");
+		System.out.println("1. Vote");
+		System.out.println("2. Show voters");
+		System.out.println("3. Check my vote");
+		System.out.println("4. Quit");
+
+	}
+
+	private boolean checkIfAuthorizedVoter(Voter v)
+	{
+		System.out.println(v.getName());
+		System.out.println(v.getPersonalNumber());
+		for (int i = 0; i < authorizedVoters.size(); i++)
+		{
+			if (authorizedVoters.get(i).equals(v))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
 
 	public static void main(String[] args)
 	{

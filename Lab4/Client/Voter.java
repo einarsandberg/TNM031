@@ -44,6 +44,13 @@ public class Voter
 	{
 		return idNumber;
 	}
+	public boolean equals(Voter v)
+	{
+		if (name.equals(v.name) && personNumber == v.personNumber)
+			return true;
+
+		return false;
+	}
 
 
 }

@@ -192,6 +192,7 @@ public class CentralTabulatingFacility
 					System.out.println("Validation number found and unchecked! Checking...");
 					//update check status
 					validationNumberMap.put(validationNumber, "checked");
+					System.out.println("Vote registered!");
 				}
 			}
 		
