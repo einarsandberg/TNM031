@@ -9,17 +9,24 @@ public class CentralLegitimationAgency
 {
 	private int port;
 	// This is not a reserved port number
-	static final int DEFAULT_PORT = 8189;
+	static final int DEFAULT_PORT = 8190;
 	static final String KEYSTORE = "CLAKeyStore.ks";
 	static final String TRUSTSTORE = "CLATrustStore.ks";
 	static final String STOREPASSWD = "123456";
 	static final String ALIASPASSWD = "123456";
 
 	private Map <Long, Voter> voters; // map with validation number as key and voter as value
-	BufferedReader socketIn;
-	PrintWriter socketOut;
-	SSLSocket incoming;
+	BufferedReader socketInClient;
+	PrintWriter socketOutClient;
+	SSLSocket streamClient;
 	private boolean running = true;
+
+	private SSLSocketFactory socketFactory;
+	private SSLSocket socketCTF;
+	private SSLSocket socketClient;
+
+	PrintWriter socketOutCTF;
+	BufferedReader socketInCTF;
 	public CentralLegitimationAgency(int thePort)
 	{
 		port = thePort;
@@ -45,41 +52,57 @@ public class CentralLegitimationAgency
 			SSLContext sslContext = SSLContext.getInstance("TLS");
 			sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
 			SSLServerSocketFactory sslServerFactory = sslContext.getServerSocketFactory();
-			SSLServerSocket sss = (SSLServerSocket) sslServerFactory.createServerSocket(port);
-
+			//SSLServerSocket sss = (SSLServerSocket) sslServerFactory.createServerSocket(port);
+			SSLServerSocket sss = (SSLServerSocket) sslServerFactory.createServerSocket(8190);
 			sss.setEnabledCipherSuites( sss.getSupportedCipherSuites() );
+
+			SSLSocketFactory sslFact = sslContext.getSocketFactory();
 
 			//client authentication is required
 			sss.setNeedClientAuth(true);
 			System.out.println("Central Legitimation Agency is now active");
-			
+
+			//socketFactory = (SSLSocketFactory)SSLSocketFactory.getDefault();
+			socketCTF = (SSLSocket) sslFact.createSocket("localhost", 8192);
+
 			while (running)
 			{
-				incoming = (SSLSocket)sss.accept();
-				socketIn = new BufferedReader(new InputStreamReader(incoming.getInputStream()));
-				socketOut = new PrintWriter(incoming.getOutputStream(), true);
-				String s = socketIn.readLine();
+				streamClient = (SSLSocket)sss.accept();
+
+				socketOutCTF = new PrintWriter(socketCTF.getOutputStream(), true);
+				socketInCTF = new BufferedReader(new InputStreamReader(socketCTF.getInputStream()));
+
+				socketInClient = new BufferedReader(new InputStreamReader(streamClient.getInputStream()));
+				socketOutClient = new PrintWriter(streamClient.getOutputStream(), true);
+				
+				String s = socketInClient.readLine();
 				if (s!= null)
 				{
 					switch (s)
 					{
 						case "validationNumStep":
-							String name = socketIn.readLine();
-							long persNumber = Long.parseLong(socketIn.readLine());
-							sendValidationNumber(name, persNumber);
+							String name = socketInClient.readLine();
+							long persNumber = Long.parseLong(socketInClient.readLine());
+							long validationNumber = createValidationNumber(name, persNumber);
+							if (validationNumber == -1)
+							{
+								System.out.println("FRAUD!!!");
+								break;
+							}
+							System.out.println(validationNumber);
+							sendValidationNumberToClient(validationNumber);
+							sendValidationNumberToCTF(validationNumber);
+
 							break;
 
 						default:
 							running = false;
 							break;
-
 					}
 				}
 
 			}
-			incoming.close();
-
-
+			streamClient.close();
 		}
 		catch (Exception e)
 		{
@@ -88,7 +111,7 @@ public class CentralLegitimationAgency
 		}
 
 	}
-	private void sendValidationNumber(String name, long persNumber)
+	private long createValidationNumber(String name, long persNumber)
 	{
 		Voter v = new Voter(name, persNumber);
 		Random rand = new Random();
@@ -101,17 +124,17 @@ public class CentralLegitimationAgency
 		if (voters.isEmpty())
 		{
 			voters.put(validationNum, v);
+
 			//send validation number to client
-			socketOut.println(validationNum);
+			return validationNum;
 		}
 		else
 		{	
-			
 			List <Voter> listOfVoters = new ArrayList<Voter>(voters.values());
-			//check for fraud
+			//check for fraud by comparing saved person numbers with current person number
 			fraud = checkForFraud(listOfVoters, persNumber);
 
-			//no fraud found, add new voter
+			// if no fraud found, add new voter
 			if (!fraud)
 			{
 				// produce new validation number if another voter already has it
@@ -122,43 +145,47 @@ public class CentralLegitimationAgency
 				voters.put(validationNum, v);
 				System.out.println("NO FRAUD");
 				//send validation number to client
-				socketOut.println(validationNum);
-
+				return validationNum;
 			}
-
 		}
 		System.out.println(v.toString());
 		System.out.println(validationNum);
 
+		return -1;
 	}
-	
-	public boolean checkForFraud(List<Voter> listOfVoters, long persNumber)
+	private void sendValidationNumberToClient(long validationNumber)
+	{
+		socketOutClient.println(validationNumber);
+	}
+
+	private void sendValidationNumberToCTF(long valNum)
+	{
+		socketOutCTF.println("validationNumToCTF");
+		socketOutCTF.println(valNum);
+	}
+
+	private boolean checkForFraud(List<Voter> listOfVoters, long persNumber)
 	{
 		boolean fraud = false;
-			for (int i = 0; i < listOfVoters.size(); i++)
+		for (int i = 0; i < listOfVoters.size(); i++)
+		{
+			System.out.println(listOfVoters.get(i).getPersonalNumber());
+			if (persNumber == listOfVoters.get(i).getPersonalNumber());
 			{
-				System.out.println(listOfVoters.get(i).getPersonalNumber());
-				if (persNumber == listOfVoters.get(i).getPersonalNumber());
-				{
-					System.out.println("Voter has already voted.");
-					socketOut.println("Election fraud detected!");
-					fraud = true;
-					break;
-				}
+				System.out.println("Voter has already voted.");
+				socketOutClient.println("Election fraud detected!");
+				fraud = true;
+				break;
 			}
+		}
 			return fraud;
-
 	}
+
 
 
 	public static void main(String[] args) 
 	{
-		int port = DEFAULT_PORT;
-		if (args.length > 0) 
-		{
-			port = Integer.parseInt(args[0]);
-		}	
-		CentralLegitimationAgency claServer = new CentralLegitimationAgency(port);
+		CentralLegitimationAgency claServer = new CentralLegitimationAgency(8190);
 		claServer.run();
 	}
 

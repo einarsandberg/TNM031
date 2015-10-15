@@ -19,11 +19,11 @@ public class VotingClient
 	private PrintWriter socketOut;
 
 	//constructor
-	public VotingClient(InetAddress theHost, int thePort)
+/*	public VotingClient(InetAddress theHost, int thePort)
 	{
 		host = theHost;
 		port = thePort;
-	}
+	}*/
 	public void run()
 	{
 		try
@@ -49,7 +49,9 @@ public class VotingClient
 			SSLContext sslContext = SSLContext.getInstance("TLS");
 			sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
 			SSLSocketFactory sslFact = sslContext.getSocketFactory();      	
-			SSLSocket client = (SSLSocket)sslFact.createSocket(host, port);
+			//SSLSocket client = (SSLSocket)sslFact.createSocket(host, port);
+
+			SSLSocket client = (SSLSocket) sslFact.createSocket("localhost", 8190);
 
 			client.setEnabledCipherSuites(client.getSupportedCipherSuites());
 			System.out.println("\n>>>> SSL/TLS handshake completed");
@@ -61,7 +63,7 @@ public class VotingClient
 
 			
 			Voter v = new Voter("Einar", 9201011111L);
-			askCLAForValidationNum(v.getName(), v.getPersonalNumber());
+			long validationNum = askCLAForValidationNum(v.getName(), v.getPersonalNumber());
 
 		}
 
@@ -70,7 +72,8 @@ public class VotingClient
 			System.out.println("Error" + e.toString());
 		}
 	}
-	private void askCLAForValidationNum(String name, long persNum)
+	//consider creating a new function vote which contains pretty much all steps
+	private long askCLAForValidationNum(String name, long persNum)
 	{
 		try
 		{
@@ -79,20 +82,21 @@ public class VotingClient
 			socketOut.println(persNum);
 			long validationNum = Long.parseLong(socketIn.readLine());
 			System.out.println(validationNum);
+			return validationNum;
 		}
 		catch (Exception e)
 		{
 			System.out.println("Error in askCLAForValidationNum " + e.toString());
 		}
+		return -1;
 	}
-
 
 	public static void main(String[] args)
 	{
 		try
 		{
 
-			InetAddress host = InetAddress.getLocalHost();
+			/*InetAddress host = InetAddress.getLocalHost();
 			int port = DEFAULT_PORT;
 			if ( args.length > 0 ) {
 				port = Integer.parseInt( args[0] );
@@ -100,7 +104,8 @@ public class VotingClient
 			if ( args.length > 1 ) {
 				host = InetAddress.getByName( args[1] );
 			}
-			VotingClient client = new VotingClient(host, port);
+			VotingClient client = new VotingClient(host, port);*/
+			VotingClient client = new VotingClient();
 			client.run();
 		}
 		catch (Exception e)
