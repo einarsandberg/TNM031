@@ -73,15 +73,16 @@ public class CentralTabulatingFacility
 			socketCLA.setNeedClientAuth(true);
 			System.out.println("Central Tabulating Facility is now active");
 			
+			streamCLA = (SSLSocket)socketCLA.accept();
+			streamClient = (SSLSocket)socketClient.accept();
+			socketInFromCLA = new BufferedReader(new InputStreamReader(streamCLA.getInputStream()));
+			socketOutToCLA = new PrintWriter(streamCLA.getOutputStream(), true);
+
+			socketInFromClient = new BufferedReader(new InputStreamReader(streamClient.getInputStream()));
+			socketOutToClient = new PrintWriter(streamClient.getOutputStream(), true);
+
 			while (running)
 			{
-				streamCLA = (SSLSocket)socketCLA.accept();
-				streamClient = (SSLSocket)socketClient.accept();
-				socketInFromCLA = new BufferedReader(new InputStreamReader(streamCLA.getInputStream()));
-				socketOutToCLA = new PrintWriter(streamCLA.getOutputStream(), true);
-
-				socketInFromClient = new BufferedReader(new InputStreamReader(streamClient.getInputStream()));
-				socketOutToClient = new PrintWriter(streamCLA.getOutputStream(), true);
 
 				String stringFromCLA = socketInFromCLA.readLine();
 				String stringFromClient = socketInFromClient.readLine();
@@ -91,8 +92,15 @@ public class CentralTabulatingFacility
 					{
 						case "validationNumToCTF":
 							long valNum= Long.parseLong(socketInFromCLA.readLine());
-							validationNumberMap.put(valNum, "unchecked");
-							System.out.println(valNum);
+							if (valNum == -1)
+							{
+								System.out.println("Election fraud detected!");
+							}
+							else
+							{
+								validationNumberMap.put(valNum, "unchecked");
+							}
+							
 							break;
 
 						default:
@@ -117,7 +125,21 @@ public class CentralTabulatingFacility
 							System.out.println(validationNumber);
 							System.out.println(party);
 							checkValidationNumberInMap(validationNumber);
+							if (partyCount.get(party) == null)
+							{
+								String prevVoteCount = "0";
+								socketOutToClient.println("Previous vote count: " + prevVoteCount);
+							}
+							else
+							{
+								socketOutToClient.println("Previous vote count: " + 
+									String.valueOf(partyCount.get(party)));
+							}
+							
+							socketOutToClient.println("Voting...");
 							addVote(party);
+							socketOutToClient.println("Updated vote count: " + 
+									String.valueOf(partyCount.get(party)));
 							break;
 
 						default:

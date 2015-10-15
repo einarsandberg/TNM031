@@ -65,15 +65,16 @@ public class CentralLegitimationAgency
 			//socketFactory = (SSLSocketFactory)SSLSocketFactory.getDefault();
 			socketCTF = (SSLSocket) sslFact.createSocket("localhost", 8192);
 
+			streamClient = (SSLSocket)sss.accept();
+			socketOutCTF = new PrintWriter(socketCTF.getOutputStream(), true);
+			socketInCTF = new BufferedReader(new InputStreamReader(socketCTF.getInputStream()));
+
+			socketInClient = new BufferedReader(new InputStreamReader(streamClient.getInputStream()));
+			socketOutClient = new PrintWriter(streamClient.getOutputStream(), true);
+
 			while (running)
 			{
-				streamClient = (SSLSocket)sss.accept();
-
-				socketOutCTF = new PrintWriter(socketCTF.getOutputStream(), true);
-				socketInCTF = new BufferedReader(new InputStreamReader(socketCTF.getInputStream()));
-
-				socketInClient = new BufferedReader(new InputStreamReader(streamClient.getInputStream()));
-				socketOutClient = new PrintWriter(streamClient.getOutputStream(), true);
+				
 				
 				String s = socketInClient.readLine();
 				if (s!= null)
@@ -84,17 +85,16 @@ public class CentralLegitimationAgency
 							String name = socketInClient.readLine();
 							long persNumber = Long.parseLong(socketInClient.readLine());
 							long validationNumber = createValidationNumber(name, persNumber);
+							
 							if (validationNumber == -1)
 							{
-								System.out.println("FRAUD!!!");
-								break;
+								System.out.println("Election fraud detected!");
 							}
-							System.out.println(validationNumber);
+							
 							sendValidationNumberToClient(validationNumber);
 							sendValidationNumberToCTF(validationNumber);
 
 							break;
-
 						default:
 							running = false;
 							break;
@@ -148,8 +148,6 @@ public class CentralLegitimationAgency
 				return validationNum;
 			}
 		}
-		System.out.println(v.toString());
-		System.out.println(validationNum);
 
 		return -1;
 	}
@@ -169,11 +167,9 @@ public class CentralLegitimationAgency
 		boolean fraud = false;
 		for (int i = 0; i < listOfVoters.size(); i++)
 		{
-			System.out.println(listOfVoters.get(i).getPersonalNumber());
-			if (persNumber == listOfVoters.get(i).getPersonalNumber());
+			if (persNumber == listOfVoters.get(i).getPersonalNumber())
 			{
 				System.out.println("Voter has already voted.");
-				socketOutClient.println("Election fraud detected!");
 				fraud = true;
 				break;
 			}

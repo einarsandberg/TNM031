@@ -23,10 +23,12 @@ public class VotingClient
 	private SSLSocket socketCLA;
 
 	private PrintWriter socketOutCTF;
-	//private BufferedReader socketInCTF;
+	private BufferedReader socketInCTF;
 	private SSLSocket socketCTF;
 
 	private List<Voter> authorizedVoters;
+	private String name;
+	private long persNum;
 	//constructor
 /*	public VotingClient(InetAddress theHost, int thePort)
 	{
@@ -38,6 +40,8 @@ public class VotingClient
 		try
 		{
 			authorizedVoters = new ArrayList<Voter>();
+
+			Voter v;
 			// add a few authorized voters
 			authorizedVoters.add(new Voter("Einar", 9207261111L));
 			authorizedVoters.add(new Voter("Glenn", 7701011234L));
@@ -77,20 +81,22 @@ public class VotingClient
 			socketOutCLA = new PrintWriter(socketCLA.getOutputStream(), true);
 
 			socketOutCTF = new PrintWriter(socketCTF.getOutputStream(), true);
-
-			displayMenu();
+			socketInCTF = new BufferedReader(new InputStreamReader(socketCTF.getInputStream()));
 			running = true;
-			int option = Integer.parseInt(new BufferedReader(new InputStreamReader(System.in)).readLine());
+			int option = -1;
+
 			while(running)
 			{
+				displayMenu();
+				option = Integer.parseInt(new BufferedReader(new InputStreamReader(System.in)).readLine());
 				switch(option)
 				{
 					case 1:
 						System.out.println("Please enter your name: ");
-						String name = new BufferedReader(new InputStreamReader(System.in)).readLine();
+						name = new BufferedReader(new InputStreamReader(System.in)).readLine();
 						System.out.println("Please enter your social security number in format yymmddxxxx:");
-						long persNum = Long.parseLong(new BufferedReader(new InputStreamReader(System.in)).readLine());
-						Voter v = new Voter(name, persNum);
+						persNum = Long.parseLong(new BufferedReader(new InputStreamReader(System.in)).readLine());
+						v = new Voter(name, persNum);
 						boolean authorized = checkIfAuthorizedVoter(v);
 						if (!authorized)
 						{
@@ -100,13 +106,26 @@ public class VotingClient
 						else
 						{
 							long validationNum = askCLAForValidationNum(v.getName(), v.getPersonalNumber());
-							System.out.println("Please enter party: ");
-							String party = new BufferedReader(new InputStreamReader(System.in)).readLine();
-							v.createIDNumber();
-							Vote vote = new Vote(v.getIDNumber(), validationNum, party);
-							String msgCTF = vote.createCTFMessage();
-							System.out.println(msgCTF);
-							sendMessageToCTF(msgCTF);
+							if (validationNum == -1)
+							{
+								System.out.println("You have already voted!");
+							}
+							else
+							{
+								System.out.println("Please enter party: ");
+								String party = new BufferedReader(new InputStreamReader(System.in)).readLine();
+								v.createIDNumber();
+								Vote vote = new Vote(v.getIDNumber(), validationNum, party);
+								String msgCTF = vote.createCTFMessage();
+								System.out.println(msgCTF);
+								sendMessageToCTF(msgCTF);
+								String previousVoteCount = socketInCTF.readLine();
+								System.out.println(previousVoteCount);
+								String msg = socketInCTF.readLine();
+								System.out.println(msg);
+								String currentVoteCount = socketInCTF.readLine();
+								System.out.println(currentVoteCount);
+							}
 						}
 
 						break;
@@ -139,7 +158,7 @@ public class VotingClient
 			socketOutCLA.println(name);
 			socketOutCLA.println(persNum);
 			long validationNum = Long.parseLong(socketInCLA.readLine());
-			System.out.println(validationNum);
+
 			return validationNum;
 		}
 		catch (Exception e)
@@ -167,8 +186,6 @@ public class VotingClient
 
 	private boolean checkIfAuthorizedVoter(Voter v)
 	{
-		System.out.println(v.getName());
-		System.out.println(v.getPersonalNumber());
 		for (int i = 0; i < authorizedVoters.size(); i++)
 		{
 			if (authorizedVoters.get(i).equals(v))
