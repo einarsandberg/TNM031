@@ -25,6 +25,7 @@ public class CentralTabulatingFacility
 	private SSLSocket socketCLA;
 	private SSLSocket socketClient;
 
+	private List <Long> validationNumList;
 	/*public CentralTabulatingFacility(int thePort)
 	{
 		port = thePort;
@@ -33,6 +34,7 @@ public class CentralTabulatingFacility
 	{
 		try
 		{
+			validationNumList = new ArrayList<Long>();
 			KeyStore ks = KeyStore.getInstance("JCEKS");
 			ks.load( new FileInputStream(KEYSTORE), STOREPASSWD.toCharArray());
 
@@ -62,8 +64,8 @@ public class CentralTabulatingFacility
 			
 			while (running)
 			{
-				System.out.println("HEJJJJJJJJJ");
 				streamCLA = (SSLSocket)socketCLA.accept();
+
 				socketIn = new BufferedReader(new InputStreamReader(streamCLA.getInputStream()));
 				socketOut = new PrintWriter(streamCLA.getOutputStream(), true);
 				String s = socketIn.readLine();
@@ -73,8 +75,8 @@ public class CentralTabulatingFacility
 					switch (s)
 					{
 						case "validationNumToCTF":
-							System.out.println("HHJJEJJJ");
 							long valNum= Long.parseLong(socketIn.readLine());
+							validationNumList.add(valNum);
 							System.out.println(valNum);
 							break;
 

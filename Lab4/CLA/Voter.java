@@ -1,7 +1,14 @@
+import java.io.*;
+import java.net.*;
+import javax.net.ssl.*;
+import java.security.*;
+import java.util.StringTokenizer;
+import java.lang.Object;
+import java.util.*;
 public class Voter
 {
 	//private int validationNumber;
-	private int idNumber;
+	//private long idNumber;
 	private String name;
 	private long persNumber;
 	public Voter(String theName, long thePersNumber)
@@ -15,10 +22,6 @@ public class Voter
 		return validationNumber;
 	}*/
 
-	public int getID()
-	{
-		return idNumber;
-	}
 	public String getName()
 	{
 		return name;

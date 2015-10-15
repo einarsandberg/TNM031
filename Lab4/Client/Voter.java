@@ -1,7 +1,14 @@
+import java.io.*;
+import java.net.*;
+import javax.net.ssl.*;
+import java.security.*;
+import java.util.StringTokenizer;
+import java.lang.Object;
+import java.util.*;
 public class Voter
 {
-	private int validationNumber;
-	private int idNumber;
+	
+	private long idNumber;
 	private String name;
 	private long personNumber; // ex 9207261111
 
@@ -11,23 +18,9 @@ public class Voter
 		personNumber = thePersonNumber;
 	}
 
-	public int getValidationNumber()
-	{
-		return validationNumber;
-	}
-
-	public int getID()
-	{
-		return idNumber;
-	}
 	public String getName()
 	{
 		return name;
-	}
-
-	public void setValidationNumber(int num)
-	{
-		validationNumber = num;
 	}
 
 	public long getPersonalNumber()
@@ -38,6 +31,18 @@ public class Voter
 	public String toString()
 	{
 		return (name+ ":" + String.valueOf(personNumber));
+	}
+		public void createIDNumber()
+	{
+		Random rand = new Random();
+		long min = 1;
+		long max = 1000000000L;
+		// random identification number from 1 to 1000000000
+		idNumber = min + ((long)(rand.nextDouble()*(max-min))); 
+	}
+	public long getIDNumber()
+	{
+		return idNumber;
 	}
 
 

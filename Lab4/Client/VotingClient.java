@@ -2,8 +2,9 @@ import java.io.*;
 import java.net.*;
 import javax.net.ssl.*;
 import java.security.*;
-import java.util.*;
+import java.util.StringTokenizer;
 import java.lang.Object;
+import java.util.*;
 
 public class VotingClient
 {
@@ -61,9 +62,15 @@ public class VotingClient
 			socketIn = new BufferedReader(new InputStreamReader(client.getInputStream()));
 			socketOut = new PrintWriter(client.getOutputStream(), true);
 
-			
 			Voter v = new Voter("Einar", 9201011111L);
 			long validationNum = askCLAForValidationNum(v.getName(), v.getPersonalNumber());
+
+			String party = "Socialdemokraterna";
+
+			v.createIDNumber();
+			Vote vote = new Vote(v.getIDNumber(), validationNum, party);
+			String msgCTF = vote.createCTFMessage();
+			System.out.println(msgCTF);
 
 		}
 
@@ -72,7 +79,7 @@ public class VotingClient
 			System.out.println("Error" + e.toString());
 		}
 	}
-	//consider creating a new function vote which contains pretty much all steps
+
 	private long askCLAForValidationNum(String name, long persNum)
 	{
 		try
