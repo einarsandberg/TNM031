@@ -5,12 +5,12 @@ import java.security.*;
 import java.util.StringTokenizer;
 import java.lang.Object;
 import java.util.*;
+
 public class Vote
 {
-	private long idNumber;
-	private long validationNumber;
-	private String party;
-	private String msgToCTF;
+	long idNumber;
+	long validationNumber;
+	String party;
 	public Vote(long theIDNumber, long theValidationNumber,
 				String theParty)
 	{
@@ -19,10 +19,4 @@ public class Vote
 		party = theParty;
 	}
 
-	public String createCTFMessage()
-	{
-		//msg will look like id:validationNum:party
-		msgToCTF = (String.valueOf(idNumber) + ":" + String.valueOf(validationNumber) + ":" + party); 
-		return msgToCTF;
-	}
 }

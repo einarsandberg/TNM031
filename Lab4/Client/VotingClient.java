@@ -16,9 +16,14 @@ public class VotingClient
 	static final String STOREPASSWD = "123456";
 	static final String ALIASPASSWD = "123456";
 
-	private BufferedReader socketIn;
-	private PrintWriter socketOut;
+	private BufferedReader socketInCLA;
+	private PrintWriter socketOutCLA;
 
+	private SSLSocket socketCLA;
+
+	private PrintWriter socketOutCTF;
+	//private BufferedReader socketInCTF;
+	private SSLSocket socketCTF;
 	//constructor
 /*	public VotingClient(InetAddress theHost, int thePort)
 	{
@@ -29,10 +34,7 @@ public class VotingClient
 	{
 		try
 		{
-			/* 
-			The client, ctf and cla contains each others certificates
-			in the trust stores. Think it is the correct way of doing it.
-			*/
+			
 
 			KeyStore ks = KeyStore.getInstance("JCEKS");
 			
@@ -50,17 +52,23 @@ public class VotingClient
 			SSLContext sslContext = SSLContext.getInstance("TLS");
 			sslContext.init(kmf.getKeyManagers(), tmf.getTrustManagers(), null);
 			SSLSocketFactory sslFact = sslContext.getSocketFactory();      	
-			//SSLSocket client = (SSLSocket)sslFact.createSocket(host, port);
 
-			SSLSocket client = (SSLSocket) sslFact.createSocket("localhost", 8190);
+			socketCLA = (SSLSocket) sslFact.createSocket("localhost", 8190);
 
-			client.setEnabledCipherSuites(client.getSupportedCipherSuites());
+			socketCTF = (SSLSocket) sslFact.createSocket("localhost", 8191);
+
+			socketCLA.setEnabledCipherSuites(socketCLA.getSupportedCipherSuites());
+			
+
+			socketCTF.setEnabledCipherSuites(socketCTF.getSupportedCipherSuites());
+
 			System.out.println("\n>>>> SSL/TLS handshake completed");
-
 			//initialize sockets
 
-			socketIn = new BufferedReader(new InputStreamReader(client.getInputStream()));
-			socketOut = new PrintWriter(client.getOutputStream(), true);
+			socketInCLA = new BufferedReader(new InputStreamReader(socketCLA.getInputStream()));
+			socketOutCLA = new PrintWriter(socketCLA.getOutputStream(), true);
+
+			socketOutCTF = new PrintWriter(socketCTF.getOutputStream(), true);
 
 			Voter v = new Voter("Einar", 9201011111L);
 			long validationNum = askCLAForValidationNum(v.getName(), v.getPersonalNumber());
@@ -71,6 +79,10 @@ public class VotingClient
 			Vote vote = new Vote(v.getIDNumber(), validationNum, party);
 			String msgCTF = vote.createCTFMessage();
 			System.out.println(msgCTF);
+
+			sendMessageToCTF(msgCTF);
+
+
 
 		}
 
@@ -84,10 +96,10 @@ public class VotingClient
 	{
 		try
 		{
-			socketOut.println("validationNumStep");
-			socketOut.println(name);
-			socketOut.println(persNum);
-			long validationNum = Long.parseLong(socketIn.readLine());
+			socketOutCLA.println("validationNumStep");
+			socketOutCLA.println(name);
+			socketOutCLA.println(persNum);
+			long validationNum = Long.parseLong(socketInCLA.readLine());
 			System.out.println(validationNum);
 			return validationNum;
 		}
@@ -97,6 +109,11 @@ public class VotingClient
 		}
 		return -1;
 	}
+	private void sendMessageToCTF(String msg)
+	{
+		socketOutCTF.println("msgFromClient");
+		socketOutCTF.println(msg);
+	}	
 
 	public static void main(String[] args)
 	{
