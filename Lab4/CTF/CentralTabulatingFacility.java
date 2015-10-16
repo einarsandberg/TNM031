@@ -85,6 +85,9 @@ public class CentralTabulatingFacility
 			socketInFromClient = new BufferedReader(new InputStreamReader(streamClient.getInputStream()));
 			socketOutToClient = new PrintWriter(streamClient.getOutputStream(), true);
 
+			// get number of authorized voters, and keep checking in loop if voting is complete
+			long numberOfAuthorizedVoters = Long.parseLong(socketInFromCLA.readLine());
+			long totalVotes = 0;
 			while (running)
 			{
 				String stringFromCLA = socketInFromCLA.readLine();
@@ -141,9 +144,20 @@ public class CentralTabulatingFacility
 							
 							socketOutToClient.println("Voting...");
 							addVote(party);
+							totalVotes++;
 							associateIDWithParty(hashedIDNumber, party);
 							socketOutToClient.println("Updated vote count: " + 
 									String.valueOf(partyCount.get(party)));
+
+							if (totalVotes == numberOfAuthorizedVoters)
+							{
+								System.out.println("Voting completed!");
+								System.out.println("Voting result: ");
+								System.out.println(partyCount.entrySet());
+								
+								running = false;
+							}
+
 							break;
 
 						default:
@@ -252,6 +266,10 @@ public class CentralTabulatingFacility
 			hashedIDNumbers.add(hashedIDNumber);
 			votes.put(party, hashedIDNumbers);
 		}
+	}
+	private void checkIfVotingComplete()
+	{
+
 	}
 
 	public static void main(String[] args) 

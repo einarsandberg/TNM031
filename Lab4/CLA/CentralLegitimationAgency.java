@@ -83,6 +83,11 @@ public class CentralLegitimationAgency
 			socketInClient = new BufferedReader(new InputStreamReader(streamClient.getInputStream()));
 			socketOutClient = new PrintWriter(streamClient.getOutputStream(), true);
 			String name="";
+
+			// send number of authorized voters to CTF
+			// so that it can check if the voting is completed
+			socketOutCTF.println(authorizedVoters.size());
+
 			while (running)
 			{
 				String s = socketInClient.readLine();
@@ -111,6 +116,11 @@ public class CentralLegitimationAgency
 							System.out.println(hashedValidationNumber);
 							sendValidationNumberToClient(hashedValidationNumber);
 							sendValidationNumberToCTF(hashedValidationNumber);
+
+							
+
+							
+
 
 							break;
 						default:
