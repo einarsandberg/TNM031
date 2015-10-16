@@ -29,7 +29,7 @@ public class CentralTabulatingFacility
 	private PrintWriter socketOutToClient;
 
 	private List <Long> validationNumList;
-	private Map <Long, String> validationNumberMap;
+	private Map <String, String> hashedValidationNumbers;
 	private Map <Long, Vote> votes;
 
 	private Map <String, Long> partyCount;
@@ -42,7 +42,7 @@ public class CentralTabulatingFacility
 		try
 		{
 			// validation number as key with checked/unchecked as value
-			validationNumberMap = new HashMap<Long, String>();
+			hashedValidationNumbers = new HashMap<String, String>();
 			votes = new HashMap <Long, Vote>();
 			partyCount = new HashMap <String, Long>();
 
@@ -90,15 +90,15 @@ public class CentralTabulatingFacility
 				{
 					switch (stringFromCLA)
 					{
-						case "validationNumToCTF":
-							long valNum= Long.parseLong(socketInFromCLA.readLine());
-							if (valNum == -1)
+						case "hashedValidationNumToCTF":
+							String hashedValidationNumber= socketInFromCLA.readLine();
+							if (hashedValidationNumber.equals("FRAUD"))
 							{
 								System.out.println("Election fraud detected!");
 							}
 							else
 							{
-								validationNumberMap.put(valNum, "unchecked");
+								hashedValidationNumbers.put(hashedValidationNumber, "unchecked");
 							}
 							
 							break;
@@ -117,14 +117,14 @@ public class CentralTabulatingFacility
 							//msg format is id:validationNum:party
 							String msgFromClient = socketInFromClient.readLine();
 							System.out.println(msgFromClient);
-							long idNumber = getIDNumberFromMsg(msgFromClient);
+							String hashedIDNumber = getIDNumberFromMsg(msgFromClient);
 							String party = getPartyFromMsg(msgFromClient);
-							long validationNumber = getValidationNumberFromMsg(msgFromClient);
-							validationNumberMap.put(validationNumber, "unchecked");
-							System.out.println(idNumber);
-							System.out.println(validationNumber);
+							String hashedValidationNumber = getValidationNumberFromMsg(msgFromClient);
+							hashedValidationNumbers.put(hashedValidationNumber, "unchecked");
+							System.out.println(hashedIDNumber);
+							System.out.println(hashedValidationNumber);
 							System.out.println(party);
-							checkValidationNumberInMap(validationNumber);
+							checkValidationNumberInMap(hashedValidationNumber);
 							if (partyCount.get(party) == null)
 							{
 								String prevVoteCount = "0";
@@ -158,7 +158,7 @@ public class CentralTabulatingFacility
 		}
 	}
 
-	private long getIDNumberFromMsg(String msg)
+	private String getIDNumberFromMsg(String msg)
 	{
 		try
 		{
@@ -166,15 +166,15 @@ public class CentralTabulatingFacility
 			// get characters before last colon, will be id:validationNum
 			String subStr = msg.substring(0, index-1);
 			int index2 = subStr.lastIndexOf(':');
-			long idNumber = Long.parseLong(subStr.substring(0,index2));
-			return idNumber;
+			String hashedIDNumber = subStr.substring(0,index2);
+			return hashedIDNumber;
 		}
 		catch (Exception e)
 		{
 			System.out.println("Error getting id number");
 			e.printStackTrace();
 		}
-		return -1;
+		return "";
 
 	}
 	private String getPartyFromMsg(String msg)
@@ -183,7 +183,7 @@ public class CentralTabulatingFacility
 		String party = msg.substring(index+1);
 		return party;
 	}
-	private long getValidationNumberFromMsg(String msg)
+	private String getValidationNumberFromMsg(String msg)
 	{
 		try
 		{
@@ -191,29 +191,29 @@ public class CentralTabulatingFacility
 			// get characters before last colon, will be id:validationNum
 			String subStr = msg.substring(0, index);
 			int index2 = subStr.lastIndexOf(':');
-			long validationNumber = Long.parseLong(subStr.substring(index2+1));
-			return validationNumber;
+			String hashedValidationNumber = subStr.substring(index2+1);
+			return hashedValidationNumber;
 		}
 		catch (Exception e)
 		{
 			System.out.println("Error getting validation number");
 			e.printStackTrace();
 		}
-		return -1;
+		return "";
 	}
-	private  void checkValidationNumberInMap(long validationNumber)
+	private  void checkValidationNumberInMap(String hashedValidationNumber)
 	{
-			if (validationNumberMap.get(validationNumber) == "checked")
+			if (hashedValidationNumbers.get(hashedValidationNumber) == "checked")
 			{
 				System.out.println("Election fraud detected! Validation number already checked.");
 			}
 			else
 			{
-				if (validationNumberMap.containsKey(validationNumber))
+				if (hashedValidationNumbers.containsKey(hashedValidationNumber))
 				{
 					System.out.println("Validation number found and unchecked! Checking...");
 					//update check status
-					validationNumberMap.put(validationNumber, "checked");
+					hashedValidationNumbers.put(hashedValidationNumber, "checked");
 					System.out.println("Vote registered!");
 				}
 			}

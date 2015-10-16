@@ -105,8 +105,8 @@ public class VotingClient
 						}
 						else
 						{
-							long validationNum = askCLAForValidationNum(v.getName(), v.getPersonalNumber());
-							if (validationNum == -1)
+							String hashedValidationNumber = askCLAForValidationNum(v.getName(), v.getPersonalNumber());
+							if (hashedValidationNumber.equals("FRAUD"))
 							{
 								System.out.println("You have already voted!");
 							}
@@ -115,7 +115,7 @@ public class VotingClient
 								System.out.println("Please enter party: ");
 								String party = new BufferedReader(new InputStreamReader(System.in)).readLine();
 								v.createIDNumber();
-								Vote vote = new Vote(v.getIDNumber(), validationNum, party);
+								Vote vote = new Vote(v.getIDNumber(), hashedValidationNumber, party);
 								String msgCTF = vote.createCTFMessage();
 								System.out.println(msgCTF);
 								sendMessageToCTF(msgCTF);
@@ -150,22 +150,22 @@ public class VotingClient
 		}
 	}
 
-	private long askCLAForValidationNum(String name, long persNum)
+	private String askCLAForValidationNum(String name, long persNum)
 	{
 		try
 		{
 			socketOutCLA.println("validationNumStep");
 			socketOutCLA.println(name);
 			socketOutCLA.println(persNum);
-			long validationNum = Long.parseLong(socketInCLA.readLine());
+			String hashedValidationNumber = socketInCLA.readLine();
 
-			return validationNum;
+			return hashedValidationNumber;
 		}
 		catch (Exception e)
 		{
 			System.out.println("Error in askCLAForValidationNum " + e.toString());
 		}
-		return -1;
+		return "";
 	}
 
 	private void sendMessageToCTF(String msg)
@@ -194,6 +194,12 @@ public class VotingClient
 			}
 		}
 		return false;
+	}
+
+	// hash with the SHA1 algorithm
+	private String hash(String validation)
+	{
+		return "";
 	}
 
 	public static void main(String[] args)

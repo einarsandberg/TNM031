@@ -5,6 +5,7 @@ import java.security.*;
 import java.util.StringTokenizer;
 import java.lang.Object;
 import java.util.*;
+import java.math.*;
 public class CentralLegitimationAgency
 {
 	private int port;
@@ -15,7 +16,7 @@ public class CentralLegitimationAgency
 	static final String STOREPASSWD = "123456";
 	static final String ALIASPASSWD = "123456";
 
-	private Map <Long, Voter> voters; // map with validation number as key and voter as value
+	private Map <String, Voter> voters; // map with validation number as key and voter as value
 	BufferedReader socketInClient;
 	PrintWriter socketOutClient;
 	SSLSocket streamClient;
@@ -27,6 +28,9 @@ public class CentralLegitimationAgency
 
 	PrintWriter socketOutCTF;
 	BufferedReader socketInCTF;
+
+
+
 	public CentralLegitimationAgency(int thePort)
 	{
 		port = thePort;
@@ -35,8 +39,8 @@ public class CentralLegitimationAgency
 	{
 		try
 		{
-
-			voters = new HashMap <Long, Voter>();
+			// voters uses hashed validation number as key, and a voter as value
+			voters = new HashMap <String, Voter>();
 			KeyStore ks = KeyStore.getInstance("JCEKS");
 			ks.load( new FileInputStream(KEYSTORE), STOREPASSWD.toCharArray());
 
@@ -84,15 +88,16 @@ public class CentralLegitimationAgency
 						case "validationNumStep":
 							String name = socketInClient.readLine();
 							long persNumber = Long.parseLong(socketInClient.readLine());
-							long validationNumber = createValidationNumber(name, persNumber);
+							String hashedValidationNumber = createValidationNumber(name, persNumber);
 							
-							if (validationNumber == -1)
+							if (hashedValidationNumber.equals("FRAUD"))
 							{
 								System.out.println("Election fraud detected!");
 							}
-							
-							sendValidationNumberToClient(validationNumber);
-							sendValidationNumberToCTF(validationNumber);
+			
+							System.out.println(hashedValidationNumber);
+							sendValidationNumberToClient(hashedValidationNumber);
+							sendValidationNumberToCTF(hashedValidationNumber);
 
 							break;
 						default:
@@ -111,7 +116,8 @@ public class CentralLegitimationAgency
 		}
 
 	}
-	private long createValidationNumber(String name, long persNumber)
+	// uses hash function to encrypt the validation number
+	private String createValidationNumber(String name, long persNumber)
 	{
 		Voter v = new Voter(name, persNumber);
 		Random rand = new Random();
@@ -119,14 +125,14 @@ public class CentralLegitimationAgency
 		long max = 1000000000L;
 		boolean fraud = false;
 		// random validation number from 1 to 1000000000
-		long validationNum = min + ((long)(rand.nextDouble()*(max-min))); 
+		String hashedValidationNumber = hash(min + ((long)(rand.nextDouble()*(max-min)))); 
 		// first voter
 		if (voters.isEmpty())
 		{
-			voters.put(validationNum, v);
+			voters.put(hashedValidationNumber, v);
 
 			//send validation number to client
-			return validationNum;
+			return hashedValidationNumber;
 		}
 		else
 		{	
@@ -138,28 +144,28 @@ public class CentralLegitimationAgency
 			if (!fraud)
 			{
 				// produce new validation number if another voter already has it
-				while(voters.containsKey(validationNum))
+				while(voters.containsKey(hashedValidationNumber))
 				{
-					validationNum = min + ((long)(rand.nextDouble()*(max-min)));
+					hashedValidationNumber = hash(min + ((long)(rand.nextDouble()*(max-min))));
 				}
-				voters.put(validationNum, v);
+				voters.put(hashedValidationNumber, v);
 				System.out.println("NO FRAUD");
 				//send validation number to client
-				return validationNum;
+				return hashedValidationNumber;
 			}
 		}
 
-		return -1;
+		return "FRAUD";
 	}
-	private void sendValidationNumberToClient(long validationNumber)
+	private void sendValidationNumberToClient(String hashedValidationNumber)
 	{
-		socketOutClient.println(validationNumber);
+		socketOutClient.println(hashedValidationNumber);
 	}
 
-	private void sendValidationNumberToCTF(long valNum)
+	private void sendValidationNumberToCTF(String hashedValidationNumber)
 	{
-		socketOutCTF.println("validationNumToCTF");
-		socketOutCTF.println(valNum);
+		socketOutCTF.println("hashedValidationNumToCTF");
+		socketOutCTF.println(hashedValidationNumber);
 	}
 
 	private boolean checkForFraud(List<Voter> listOfVoters, long persNumber)
@@ -176,7 +182,28 @@ public class CentralLegitimationAgency
 		}
 			return fraud;
 	}
+	// hash with the sha1 algorithm
+	private String hash(long validationNumber)
+	{	
+		try
+		{
+			if (validationNumber == -1)
+				return "FRAUD";
 
+			MessageDigest crypt = MessageDigest.getInstance("SHA-1");
+			crypt.reset();
+			crypt.update(String.valueOf(validationNumber).getBytes("UTF-8"));
+
+			return new BigInteger(1, crypt.digest()).toString(16);
+		}
+		catch (Exception e)
+		{
+			System.out.println("Error when hashing");
+			e.printStackTrace();
+		}
+		return "FRAUD";
+
+	}	
 
 
 	public static void main(String[] args) 

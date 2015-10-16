@@ -5,10 +5,11 @@ import java.security.*;
 import java.util.StringTokenizer;
 import java.lang.Object;
 import java.util.*;
+import java.math.*;
 public class Voter
 {
 	
-	private long idNumber;
+	private String hashedIDNumber;
 	private String name;
 	private long personNumber; // ex 9207261111
 
@@ -30,19 +31,41 @@ public class Voter
 
 	public String toString()
 	{
-		return (name+ ":" + String.valueOf(personNumber));
+		return (name + ":" + String.valueOf(personNumber));
 	}
-		public void createIDNumber()
+
+	public void createIDNumber()
 	{
 		Random rand = new Random();
 		long min = 1;
 		long max = 1000000000L;
 		// random identification number from 1 to 1000000000
-		idNumber = min + ((long)(rand.nextDouble()*(max-min))); 
+		hashedIDNumber = hash(min + ((long)(rand.nextDouble()*(max-min)))); 
 	}
-	public long getIDNumber()
+
+	private String hash(long idNumber)
+	{	
+		try
+		{
+
+			MessageDigest crypt = MessageDigest.getInstance("SHA-1");
+			crypt.reset();
+			crypt.update(String.valueOf(idNumber).getBytes("UTF-8"));
+
+			return new BigInteger(1, crypt.digest()).toString(16);
+		}
+		catch (Exception e)
+		{
+			System.out.println("Error when hashing");
+			e.printStackTrace();
+		}
+		return "";
+
+	}	
+
+	public String getIDNumber()
 	{
-		return idNumber;
+		return hashedIDNumber;
 	}
 	public boolean equals(Voter v)
 	{
