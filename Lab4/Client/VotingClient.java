@@ -26,7 +26,6 @@ public class VotingClient
 	private BufferedReader socketInCTF;
 	private SSLSocket socketCTF;
 
-	private List<Voter> authorizedVoters;
 	private String name;
 	private long persNum;
 	//constructor
@@ -39,14 +38,8 @@ public class VotingClient
 	{
 		try
 		{
-			authorizedVoters = new ArrayList<Voter>();
 
 			Voter v;
-			// add a few authorized voters
-			authorizedVoters.add(new Voter("Einar", 9207261111L));
-			authorizedVoters.add(new Voter("Glenn", 7701011234L));
-			authorizedVoters.add(new Voter("Anna", 5005055555L));
-			authorizedVoters.add(new Voter("Maria", 9302029999L));
 
 			KeyStore ks = KeyStore.getInstance("JCEKS");
 			
@@ -186,15 +179,23 @@ public class VotingClient
 
 	private boolean checkIfAuthorizedVoter(Voter v)
 	{
-		for (int i = 0; i < authorizedVoters.size(); i++)
+		boolean authorized = false;
+		try
 		{
-			if (authorizedVoters.get(i).equals(v))
-			{
-				return true;
-			}
+			socketOutCLA.println("authVoterCheck");
+			socketOutCLA.println(v.getPersonalNumber());
+			socketOutCLA.println(v.getName());
+			authorized = Boolean.parseBoolean(socketInCLA.readLine());	
 		}
-		return false;
+		catch (Exception e)
+		{
+			System.out.println("Error checking if authorized voter");
+			e.printStackTrace();
+		}
+		return authorized;
 	}
+
+
 
 	// hash with the SHA1 algorithm
 	private String hash(String validation)

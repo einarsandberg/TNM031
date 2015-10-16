@@ -29,7 +29,7 @@ public class CentralLegitimationAgency
 	PrintWriter socketOutCTF;
 	BufferedReader socketInCTF;
 
-
+	private List<Voter> authorizedVoters;
 
 	public CentralLegitimationAgency(int thePort)
 	{
@@ -39,6 +39,13 @@ public class CentralLegitimationAgency
 	{
 		try
 		{
+			authorizedVoters = new ArrayList<Voter>();
+			// add a few authorized voters
+			authorizedVoters.add(new Voter("Einar", 9207261111L));
+			authorizedVoters.add(new Voter("Glenn", 7701011234L));
+			authorizedVoters.add(new Voter("Anna", 5005055555L));
+			authorizedVoters.add(new Voter("Maria", 9302029999L));
+
 			// voters uses hashed validation number as key, and a voter as value
 			voters = new HashMap <String, Voter>();
 			KeyStore ks = KeyStore.getInstance("JCEKS");
@@ -75,18 +82,24 @@ public class CentralLegitimationAgency
 
 			socketInClient = new BufferedReader(new InputStreamReader(streamClient.getInputStream()));
 			socketOutClient = new PrintWriter(streamClient.getOutputStream(), true);
-
+			String name="";
 			while (running)
 			{
-				
-				
 				String s = socketInClient.readLine();
 				if (s!= null)
 				{
 					switch (s)
 					{
+						case "authVoterCheck":
+							long personNumber = Long.parseLong(socketInClient.readLine());
+							name = socketInClient.readLine();
+							boolean authorized = checkIfAuthorizedVoter(name, personNumber);
+							System.out.println(authorized);
+							socketOutClient.println(authorized);
+							break;
+
 						case "validationNumStep":
-							String name = socketInClient.readLine();
+							name = socketInClient.readLine();
 							long persNumber = Long.parseLong(socketInClient.readLine());
 							String hashedValidationNumber = createValidationNumber(name, persNumber);
 							
@@ -114,8 +127,24 @@ public class CentralLegitimationAgency
 			System.out.println("Server failed ");
 			e.printStackTrace();
 		}
-
 	}
+
+	private boolean checkIfAuthorizedVoter(String name, long personNumber)
+	{
+		System.out.println(name);
+		System.out.println(personNumber);
+		Voter v = new Voter(name, personNumber);
+
+		for (int i = 0; i < authorizedVoters.size(); i++)
+		{
+			if (v.equals(authorizedVoters.get(i)))
+			{
+				return true;
+			}
+		}
+		return false;
+	}
+
 	// uses hash function to encrypt the validation number
 	private String createValidationNumber(String name, long persNumber)
 	{
@@ -130,7 +159,6 @@ public class CentralLegitimationAgency
 		if (voters.isEmpty())
 		{
 			voters.put(hashedValidationNumber, v);
-
 			//send validation number to client
 			return hashedValidationNumber;
 		}
@@ -202,7 +230,6 @@ public class CentralLegitimationAgency
 			e.printStackTrace();
 		}
 		return "FRAUD";
-
 	}	
 
 

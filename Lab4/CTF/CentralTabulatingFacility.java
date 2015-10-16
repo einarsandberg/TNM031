@@ -87,7 +87,6 @@ public class CentralTabulatingFacility
 
 			while (running)
 			{
-
 				String stringFromCLA = socketInFromCLA.readLine();
 				String stringFromClient = socketInFromClient.readLine();
 				if (stringFromCLA!= null)
@@ -180,7 +179,6 @@ public class CentralTabulatingFacility
 			e.printStackTrace();
 		}
 		return "";
-
 	}
 	private String getPartyFromMsg(String msg)
 	{
@@ -208,22 +206,20 @@ public class CentralTabulatingFacility
 	}
 	private  void checkValidationNumberInMap(String hashedValidationNumber)
 	{
-			if (hashedValidationNumbers.get(hashedValidationNumber) == "checked")
+		if (hashedValidationNumbers.get(hashedValidationNumber) == "checked")
+		{
+			System.out.println("Election fraud detected! Validation number already checked.");
+		}
+		else
+		{
+			if (hashedValidationNumbers.containsKey(hashedValidationNumber))
 			{
-				System.out.println("Election fraud detected! Validation number already checked.");
+				System.out.println("Validation number found and unchecked! Checking...");
+				//update check status
+				hashedValidationNumbers.put(hashedValidationNumber, "checked");
+				System.out.println("Vote registered!");
 			}
-			else
-			{
-				if (hashedValidationNumbers.containsKey(hashedValidationNumber))
-				{
-					System.out.println("Validation number found and unchecked! Checking...");
-					//update check status
-					hashedValidationNumbers.put(hashedValidationNumber, "checked");
-					System.out.println("Vote registered!");
-				}
-			}
-		
-
+		}
 	}
 	private void addVote(String party)
 	{
@@ -242,29 +238,20 @@ public class CentralTabulatingFacility
 	private void associateIDWithParty(String hashedIDNumber, String party)
 	{
 		List<String> hashedIDNumbers;
+		// if new party found
 		if (!votes.containsKey(party))
 		{
-			System.out.println("Does not contain key");
 			hashedIDNumbers = new ArrayList<String>();
 			hashedIDNumbers.add(hashedIDNumber);
 			votes.put(party, hashedIDNumbers);
 		}
+		//party found, update with id number
 		else
 		{
-			System.out.println("Contains key");
 			hashedIDNumbers = new ArrayList<String>(votes.get(party));
 			hashedIDNumbers.add(hashedIDNumber);
 			votes.put(party, hashedIDNumbers);
 		}
-
-		for (int k = 0; k < votes.get(party).size(); k++)
-		{
-			System.out.println("HEJ1");
-			System.out.println(votes.get(party).get(k));
-			System.out.println("HEJ2");
-		}
-		
-
 	}
 
 	public static void main(String[] args) 

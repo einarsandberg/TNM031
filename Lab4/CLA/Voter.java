@@ -35,6 +35,16 @@ public class Voter
 	{
 		return persNumber;
 	}
+
+	public boolean equals(Voter v)
+	{
+		if (name.equals(v.name) && persNumber == v.persNumber)
+		{
+			return true;
+		}
+
+		return false;
+	}
 	/*public void setValidationNumber(int num)
 	{
 		validationNumber = num;
