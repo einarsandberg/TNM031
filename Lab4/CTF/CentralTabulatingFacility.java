@@ -30,7 +30,10 @@ public class CentralTabulatingFacility
 
 	private List <Long> validationNumList;
 	private Map <String, String> hashedValidationNumbers;
-	private Map <Long, Vote> votes;
+	
+	
+	// party as key and list of hashed id numbers as value
+	private Map <String, List<String> > votes;
 
 	private Map <String, Long> partyCount;
 	/*public CentralTabulatingFacility(int thePort)
@@ -43,7 +46,8 @@ public class CentralTabulatingFacility
 		{
 			// validation number as key with checked/unchecked as value
 			hashedValidationNumbers = new HashMap<String, String>();
-			votes = new HashMap <Long, Vote>();
+			
+			votes = new HashMap <String, List<String> >();
 			partyCount = new HashMap <String, Long>();
 
 			KeyStore ks = KeyStore.getInstance("JCEKS");
@@ -138,6 +142,7 @@ public class CentralTabulatingFacility
 							
 							socketOutToClient.println("Voting...");
 							addVote(party);
+							associateIDWithParty(hashedIDNumber, party);
 							socketOutToClient.println("Updated vote count: " + 
 									String.valueOf(partyCount.get(party)));
 							break;
@@ -222,7 +227,6 @@ public class CentralTabulatingFacility
 	}
 	private void addVote(String party)
 	{
-
 		if (partyCount.containsKey(party))
 		{
 			long numberOfVotes = partyCount.get(party);
@@ -234,6 +238,33 @@ public class CentralTabulatingFacility
 		{
 			partyCount.put(party, 1L);
 		}
+	}
+	private void associateIDWithParty(String hashedIDNumber, String party)
+	{
+		List<String> hashedIDNumbers;
+		if (!votes.containsKey(party))
+		{
+			System.out.println("Does not contain key");
+			hashedIDNumbers = new ArrayList<String>();
+			hashedIDNumbers.add(hashedIDNumber);
+			votes.put(party, hashedIDNumbers);
+		}
+		else
+		{
+			System.out.println("Contains key");
+			hashedIDNumbers = new ArrayList<String>(votes.get(party));
+			hashedIDNumbers.add(hashedIDNumber);
+			votes.put(party, hashedIDNumbers);
+		}
+
+		for (int k = 0; k < votes.get(party).size(); k++)
+		{
+			System.out.println("HEJ1");
+			System.out.println(votes.get(party).get(k));
+			System.out.println("HEJ2");
+		}
+		
+
 	}
 
 	public static void main(String[] args) 
