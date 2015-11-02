@@ -28,6 +28,7 @@ public class VotingClient
 
 	private String name;
 	private long persNum;
+	private List <String> currentVoters;
 	//constructor
 /*	public VotingClient(InetAddress theHost, int thePort)
 	{
@@ -39,6 +40,7 @@ public class VotingClient
 		try
 		{
 
+			currentVoters = new ArrayList<String>();
 			Voter v;
 
 			KeyStore ks = KeyStore.getInstance("JCEKS");
@@ -118,17 +120,20 @@ public class VotingClient
 								System.out.println(msg);
 								String currentVoteCount = socketInCTF.readLine();
 								System.out.println(currentVoteCount);
+								currentVoters.add(v.getName());
+								
 							}
 						}
 
 						break;
 					case 2:
+						displayCurrentVoters();
 						break;
 
 					case 3:
+						running = false;
 						break;
-
-					case 4:
+					default:
 						running = false;
 						break;
 				}
@@ -143,6 +148,15 @@ public class VotingClient
 		}
 	}
 
+	private void displayCurrentVoters()
+	{
+		System.out.println("Current voters: ");
+		for (int i = 0; i < currentVoters.size(); i++)
+		{
+			System.out.println(currentVoters.get(i));
+		}
+
+	}
 	private String askCLAForValidationNum(String name, long persNum)
 	{
 		try
@@ -172,8 +186,7 @@ public class VotingClient
 		System.out.println("What would you like to do? Please pick an option.");
 		System.out.println("1. Vote");
 		System.out.println("2. Show voters");
-		System.out.println("3. Check my vote");
-		System.out.println("4. Quit");
+		System.out.println("3. Quit");
 
 	}
 

@@ -99,7 +99,6 @@ public class CentralLegitimationAgency
 							long personNumber = Long.parseLong(socketInClient.readLine());
 							name = socketInClient.readLine();
 							boolean authorized = checkIfAuthorizedVoter(name, personNumber);
-							System.out.println(authorized);
 							socketOutClient.println(authorized);
 							break;
 
@@ -112,15 +111,8 @@ public class CentralLegitimationAgency
 							{
 								System.out.println("Election fraud detected!");
 							}
-			
-							System.out.println(hashedValidationNumber);
 							sendValidationNumberToClient(hashedValidationNumber);
 							sendValidationNumberToCTF(hashedValidationNumber);
-
-							
-
-							
-
 
 							break;
 						default:
@@ -141,8 +133,6 @@ public class CentralLegitimationAgency
 
 	private boolean checkIfAuthorizedVoter(String name, long personNumber)
 	{
-		System.out.println(name);
-		System.out.println(personNumber);
 		Voter v = new Voter(name, personNumber);
 
 		for (int i = 0; i < authorizedVoters.size(); i++)
