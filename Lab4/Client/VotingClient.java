@@ -29,12 +29,7 @@ public class VotingClient
 	private String name;
 	private long persNum;
 	private List <String> currentVoters;
-	//constructor
-/*	public VotingClient(InetAddress theHost, int thePort)
-	{
-		host = theHost;
-		port = thePort;
-	}*/
+	
 	public void run()
 	{
 		try
@@ -112,7 +107,7 @@ public class VotingClient
 								v.createIDNumber();
 								Vote vote = new Vote(v.getIDNumber(), hashedValidationNumber, party);
 								String msgCTF = vote.createCTFMessage();
-								System.out.println(msgCTF);
+								
 								sendMessageToCTF(msgCTF);
 								String previousVoteCount = socketInCTF.readLine();
 								System.out.println(previousVoteCount);
@@ -220,16 +215,6 @@ public class VotingClient
 	{
 		try
 		{
-
-			/*InetAddress host = InetAddress.getLocalHost();
-			int port = DEFAULT_PORT;
-			if ( args.length > 0 ) {
-				port = Integer.parseInt( args[0] );
-			}
-			if ( args.length > 1 ) {
-				host = InetAddress.getByName( args[1] );
-			}
-			VotingClient client = new VotingClient(host, port);*/
 			VotingClient client = new VotingClient();
 			client.run();
 		}

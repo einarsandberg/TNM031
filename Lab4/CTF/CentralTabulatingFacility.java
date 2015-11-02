@@ -36,10 +36,7 @@ public class CentralTabulatingFacility
 	private Map <String, List<String> > votes;
 
 	private Map <String, Long> partyCount;
-	/*public CentralTabulatingFacility(int thePort)
-	{
-		port = thePort;
-	}*/
+
 	public void run()
 	{
 		try
@@ -148,7 +145,7 @@ public class CentralTabulatingFacility
 							associateIDWithParty(hashedIDNumber, party);
 							socketOutToClient.println("Updated vote count: " + 
 									String.valueOf(partyCount.get(party)));
-
+							
 							if (totalVotes == numberOfAuthorizedVoters)
 							{
 								System.out.println("Voting completed!");
